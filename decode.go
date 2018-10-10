@@ -77,9 +77,10 @@ func (de *decoder) message(buf []byte, sval reflect.Value) error {
 	}
 	// Decode all the fields
 	fields := ProtoFields(sval.Type())
-	fieldi := 0
+
 	for len(buf) > 0 {
 		// Parse the key
+		fieldi := 0
 		key, n := binary.Uvarint(buf)
 		if n <= 0 {
 			return errors.New("bad protobuf field key")
@@ -93,8 +94,11 @@ func (de *decoder) message(buf []byte, sval reflect.Value) error {
 		// In this case, as well as for blank fields,
 		// value() will just skip over and discard the field content.
 		var field reflect.Value
-		for fieldi < len(fields) && fields[fieldi].ID < int64(fieldnum) {
-			fieldi++
+		for fieldi2 := range fields {
+			if fields[fieldi2].ID == int64(fieldnum) {
+				fieldi = fieldi2
+				break
+			}
 		}
 
 		if fieldi < len(fields) && fields[fieldi].ID == int64(fieldnum) {
