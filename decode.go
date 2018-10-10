@@ -94,14 +94,16 @@ func (de *decoder) message(buf []byte, sval reflect.Value) error {
 		// In this case, as well as for blank fields,
 		// value() will just skip over and discard the field content.
 		var field reflect.Value
+		have := false
 		for fieldi2 := range fields {
 			if fields[fieldi2].ID == int64(fieldnum) {
 				fieldi = fieldi2
+				have = true
 				break
 			}
 		}
 
-		if fieldi < len(fields) && fields[fieldi].ID == int64(fieldnum) {
+		if have && fieldi < len(fields) && fields[fieldi].ID == int64(fieldnum) {
 			// For fields within embedded structs, ensure the embedded values aren't nil.
 			index := fields[fieldi].Index
 			path := make([]int, 0, len(index))
