@@ -94,27 +94,22 @@ func (de *decoder) message(buf []byte, sval reflect.Value) error {
 		// In this case, as well as for blank fields,
 		// value() will just skip over and discard the field content.
 		var field reflect.Value
-		have := false
-		for fieldi2 := range fields {
-			if fields[fieldi2].ID == int64(fieldnum) {
-				fieldi = fieldi2
-				have = true
+		for fieldi = range fields {
+			if fields[fieldi].ID == int64(fieldnum) {
+				// For fields within embedded structs, ensure the embedded values aren't nil.
+				index := fields[fieldi].Index
+				path := make([]int, 0, len(index))
+				for _, id := range index {
+					path = append(path, id)
+					field = sval.FieldByIndex(path)
+					if field.Kind() == reflect.Ptr && field.IsNil() {
+						field.Set(reflect.New(field.Type().Elem()))
+					}
+				}
 				break
 			}
 		}
 
-		if have && fieldi < len(fields) && fields[fieldi].ID == int64(fieldnum) {
-			// For fields within embedded structs, ensure the embedded values aren't nil.
-			index := fields[fieldi].Index
-			path := make([]int, 0, len(index))
-			for _, id := range index {
-				path = append(path, id)
-				field = sval.FieldByIndex(path)
-				if field.Kind() == reflect.Ptr && field.IsNil() {
-					field.Set(reflect.New(field.Type().Elem()))
-				}
-			}
-		}
 
 		// For more debugging output, uncomment the following three lines.
 		// if fieldi < len(fields){
